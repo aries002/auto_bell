@@ -1,0 +1,17 @@
+{
+    "jadwal":{
+        "13:00":"bell",
+        "14:52":"bell_masuk",
+        "14:54":"bell",
+        "19:12":"bell",
+        "21:32":"bell_masuk"
+    },
+    "playlist": {
+        "bell":["bell.mp3"],
+        "bell_masuk":["bell.mp3","audio-test.mp3"]
+    },
+    "konfigurasi":{
+        "folder_musik":"./audio",
+        "url_stream":""
+    }
+}

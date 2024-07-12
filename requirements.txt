@@ -1,0 +1,2 @@
+multithreading==0.2.0
+playsound==1.2.2

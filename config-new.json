@@ -1,0 +1,19 @@
+{
+    "jadwal":{
+        "selasa":{
+            "13:00":"bell",
+            "14:52":"bell_masuk",
+            "14:54":"bell",
+            "19:12":"bell",
+            "19:42":"bell_masuk"
+        }
+    },
+    "playlist": {
+        "bell":["bell.mp3"],
+        "bell_masuk":["bell.mp3","audio-test.mp3"]
+    },
+    "konfigurasi":{
+        "folder_musik":"./",
+        "url_stream":"http://192.168.7.8:8000/radio.mp3"
+    }
+}

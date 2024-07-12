@@ -1,0 +1,6 @@
+ffmpeg-python==0.2.0
+future==1.0.0
+multithreading==0.2.0
+numpy==2.0.0
+playsound==1.2.2
+PyOpenAL==0.7.11a1

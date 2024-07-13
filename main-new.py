@@ -9,20 +9,20 @@ import datetime
 
 
 DEBUG = True
-START = True
-STS_TIMER = False
+RUN = True
+ALARM = False
 # waktu_alarm = []
-hari_alarm = []
-file_alarm = "alarm.json" #file database akan digantikan dengan mysql
-Time = time.strftime('%H:%M') #jam
-mainkan = "" # perintah untuk audio player
-now = datetime.datetime.now()
+HARI_MASUK = []
+JAM_SEKARANG = time.strftime('%H:%M') #jam
+PLAYLIST_DIMAINKAN = "" # perintah untuk audio player
+NOW = datetime.datetime.now()
 
-file_konfigurasi = "./config-new.json"
+FILE_KONFIGURASI = "./config-new.json"
 
-playlist =[]
-jadwal = []
-konfig = []
+DB_PLAYLIST =[]
+DB_JADWAL = []
+DB_KONFIGURASI = []
+DB_TANGGAL_LIBUR = []
 
 def print_log(pesan):
     waktu = time.strftime('%b %d  %H:%M:%S ')
@@ -30,7 +30,7 @@ def print_log(pesan):
     print(pesan)
 
 # Hari dalam bahasa indonesia
-def date_id(day=now.strftime("%A"),cap = False):
+def date_id(day=NOW.strftime("%A"),cap = False):
     day = day.lower()
     if day == "monday":
         day = "senin"
@@ -53,37 +53,38 @@ def date_id(day=now.strftime("%A"),cap = False):
     return day
 
 def load_config():
-    global playlist, hari_alarm, jadwal, konfig
-    playlist.clear()
-    jadwal.clear()
-    konfig.clear()
-    file = open(file_konfigurasi)
+    global DB_PLAYLIST, HARI_MASUK, DB_JADWAL, DB_KONFIGURASI, DB_TANGGAL_LIBUR
+
+    file = open(FILE_KONFIGURASI)
     try:
         data = json.load(file)
     except ValueError as err:
         print_log("Konfigurasi tidak bisa dibuka")
     else:
         print_log("mengupdate konfigurasi")
-        playlist = data["playlist"]
-        jadwal = data["jadwal"]
-        konfig = data["konfigurasi"]
+        DB_PLAYLIST.clear()
+        DB_PLAYLIST = data["playlist"]
+        DB_JADWAL.clear()
+        DB_JADWAL = data["jadwal"]
+        DB_KONFIGURASI.clear()
+        DB_KONFIGURASI = data["konfigurasi"]
+        DB_TANGGAL_LIBUR.clear()
+        DB_TANGGAL_LIBUR = data["tanggal_libur"]
     if DEBUG:
-        print(konfig)
-        print(jadwal)
-        print(playlist)
+        print(DB_KONFIGURASI)
+        print(DB_JADWAL)
+        print(DB_PLAYLIST)
+        print(DB_TANGGAL_LIBUR)
     file.close()
-    for key in jadwal:
+    for key in DB_JADWAL:
         hari = key
-        hari_alarm.append(hari)
+        HARI_MASUK.append(hari)
     if DEBUG:
-        print(hari_alarm)
+        print(HARI_MASUK)
 
 # ambil update schadule
 def load_time(jadwal=[]):
-    # global waktu_alarm, jadwal
     waktu_alarm=[]
-    # if DEBUG:
-    #     print_log("Updating schadule")
     waktu_alarm.clear()
     for k in jadwal:
         key = k
@@ -92,81 +93,120 @@ def load_time(jadwal=[]):
 
 # Audio player
 def player():
-    global mainkan
-    while START:
-        if(mainkan != ""):
-            if mainkan in playlist:
-                playing = playlist[mainkan]
+    global PLAYLIST_DIMAINKAN
+    while RUN:
+        if(PLAYLIST_DIMAINKAN != ""):
+            if PLAYLIST_DIMAINKAN in DB_PLAYLIST:
+                playing = DB_PLAYLIST[PLAYLIST_DIMAINKAN]
                 for play in playing:
-                    play = konfig["folder_musik"]+play
+                    play = DB_KONFIGURASI["folder_musik"]+play
                     if DEBUG:
                         print_log("playing "+play)
                     playsound(play)
-                    if DEBUG:
-                        time.sleep(3)
+                    # if DEBUG:
+                    #     time.sleep(3)
             else:
                 print_log("Playlist tidak ditemukan")
-        mainkan = ""
+        PLAYLIST_DIMAINKAN = ""
     print_log("Player berhenti")
 
 # Jam
+# konsep baru
+# dalam pengecekan looping, akan dilakukan looping kedua,
+# dimana looping kedua akan melakukan looping selama setatus ALARM True, sedangkan looping utama akan sesuai dengan status program
+# status alarm akan dirubah sesuai dengan hari yang akan dicek oleh looping utama dan dicek oleh looping alarm
+# dalam pengecekan di looping alarm, akadn dicek apakah hari ini masih sama dengan hari yang dijalankan
+# dalam pengecekkan looping utama akan dicek apakah hari ini libur atau tidak 
 def alarm():
-    global Time, START, mainkan, hari_alarm, STS_TIMER
-    
+    global JAM_SEKARANG, RUN, PLAYLIST_DIMAINKAN, HARI_MASUK, ALARM, NOW
+    if DEBUG:
+        print(NOW.strftime("%d/%m/%Y"))
     # load_time()
     # if DEBUG:
     #     print("jam alarm : ", waktu_alarm)
     #     # print(waktu_alarm)
-    while START:
+    while RUN:
+        ALARM = False
         hari_ini = date_id()
-        tanggal = now.strftime("%d/%m/%Y")
+        NOW = datetime.datetime.now()
+        tanggal = NOW.strftime("%d/%m/%Y")
         
-        Time = time.strftime('%H:%M') 
-        for hari in hari_alarm:
+        #pengecekkan hari libur
+        for hari in HARI_MASUK:
             if hari == hari_ini:
-                STS_TIMER = True
-                jam_alarm = load_time(jadwal[hari])
-                # print(jam_alarm)
-                for alarm in jam_alarm :
-                    if Time == alarm:
-                        playlist=jadwal[hari][alarm]
-                        if DEBUG:
-                            print_log("Jam "+Time+" memulai playlist "+playlist)
-                        # print (jadwal[hari][alarm])
-                        mainkan = playlist
+                #pengecekkan tanggal libur
+                for tgl in DB_TANGGAL_LIBUR:
+                    # print(tgl)
+                    ALARM = True
+                    if tgl == tanggal:
+                        ALARM = False
+                # time.sleep(100)
+        #perulangan yang baru
+        if ALARM:
+            while ALARM & RUN:
+                jam_alarm = load_time(DB_JADWAL[hari_ini])
+                JAM_SEKARANG = time.strftime('%H:%M')
+                for alarm in jam_alarm:
+                    if JAM_SEKARANG == alarm:
+                        PLAYLIST_DIMAINKAN = DB_JADWAL[hari_ini][JAM_SEKARANG]
+                        print_log("Memainkan playlist "+PLAYLIST_DIMAINKAN)
                         time.sleep(59)
-            else:
-                STS_TIMER = False
-        time.sleep(1)
+                #cek apakah sudah berganti hari
+                time.sleep(1)
+                if(hari_ini != date_id()):
+                    ALARM=False
+                    print_log("Perhantian hari jadwal direset!")
+        else:
+            time.sleep(60)
+        # JAM_SEKARANG = time.strftime('%H:%M') 
+        # for hari in HARI_MASUK:
+        #     if hari == hari_ini:
+        #         ALARM = True
+        #         jam_alarm = load_time(DB_JADWAL[hari])
+        #         # print(jam_alarm)
+        #         for alarm in jam_alarm :
+        #             if JAM_SEKARANG == alarm:
+        #                 DB_PLAYLIST=DB_JADWAL[hari][alarm]
+        #                 if DEBUG:
+        #                     print_log("Jam "+JAM_SEKARANG+" memulai DB_PLAYLIST "+DB_PLAYLIST)
+        #                 # print (DB_JADWAL[hari][alarm])
+        #                 PLAYLIST_DIMAINKAN = DB_PLAYLIST
+        #                 time.sleep(59)
+        #     else:
+        #         ALARM = False
+        # time.sleep(600)
     # if DEBUG:
     #     print(waktu_alarm)
     print_log("proses alarm berhenti")
 
 # interface untuk debug
 def interface():
-    global proses1, START, mainkan, Time
+    global proses1, RUN, PLAYLIST_DIMAINKAN, JAM_SEKARANG, ALARM
     print("\n")
-    while START:
+    while RUN:
         perintah = input("Perintah: ")
         if(perintah== "reload"):
             # print("perintah 1")
             load_config()
-            load_time()
+            ALARM=False
+            # load_time()
         elif(perintah=="info"):
-            print("Jadwal = ")
-            print(waktu_alarm)
-            print("Jam server = "+Time)
-            print("Playlist saat ini : "+mainkan)
-            print("status alarm : ",proses1.is_alive())
-            print("status player : ",proses2.is_alive())
+            print("Jadwal : ")
+            print(DB_JADWAL[date_id()])
+            print("Jam server           : ",time.strftime('%H:%M'))
+            print("Hari                 : ",date_id())
+            print("Playlist saat ini    : ",PLAYLIST_DIMAINKAN)
+            print("status thread alarm  : ",proses1.is_alive())
+            print("status thread player : ",proses2.is_alive())
+            print("Alarm berjalan       : ",ALARM)
         elif(perintah=="play"):
-            mainkan="bell"
+            PLAYLIST_DIMAINKAN="bell"
         elif(perintah.lower() == "quit"):
             print_log("Mematikan proses")
             # if DEBUG:
             #     print("menghentikan proses")
             # proses1.join()
-            START = False
+            RUN = False
             # return
             countdown = 60
             # print_log("menunggu roses berhenti")
@@ -175,7 +215,7 @@ def interface():
             return
         else:
             print("Perintah tidak dikenali")
-    START = False
+    RUN = False
 
 if __name__ == "__main__":
     load_config()
@@ -188,10 +228,10 @@ if __name__ == "__main__":
     proses1.start()
     proses2.start()
     #radio client
-    if konfig["url_stream"] != "":
-        icecast_client.init(konfig["url_stream"])
+    if DB_KONFIGURASI["url_stream"] != "":
+        icecast_client.init(DB_KONFIGURASI["url_stream"])
     if DEBUG:
         interface()
     else:
-        while START:
+        while RUN:
             time.sleep(1)

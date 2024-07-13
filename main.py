@@ -8,7 +8,7 @@ import icecast_client
 import datetime
 
 
-DEBUG = False
+DEBUG = True
 START = True
 waktu_alarm = []
 file_alarm = "alarm.json" #file database akan digantikan dengan mysql
@@ -178,4 +178,3 @@ if __name__ == "__main__":
     else:
         while START:
             time.sleep(1)
-        

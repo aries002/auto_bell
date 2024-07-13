@@ -12,6 +12,11 @@
         "bell":["bell.mp3"],
         "bell_masuk":["bell.mp3","audio-test.mp3"]
     },
+    "tanggal_libur":[
+        "12/07/2024",
+        "13/07/2024"
+    ]
+    ,
     "konfigurasi":{
         "folder_musik":"./",
         "url_stream":"http://192.168.7.8:8000/radio.mp3"

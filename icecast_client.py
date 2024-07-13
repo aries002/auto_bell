@@ -42,7 +42,7 @@ def get_audio_chunk(process, chunk_size):
 
 def play_audio(process):
     #Queues up PCM chunks for playing through OpenAL
-    num_buffers = 4
+    num_buffers = 8
     chunk_size = 8192
     device, context = init_audio()
     source = create_audio_source()

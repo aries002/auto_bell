@@ -6,9 +6,14 @@ import json
 import threading
 import icecast_client
 import datetime
+from gtts import gTTS
+import os
+import sys
+from flask import Flask, render_template, redirect, request, jsonify
+http =Flask(__name__)
 
 
-DEBUG = True
+DEBUG = False
 RUN = True
 ALARM = False
 # waktu_alarm = []
@@ -16,6 +21,7 @@ HARI_MASUK = []
 JAM_SEKARANG = time.strftime('%H:%M') #jam
 PLAYLIST_DIMAINKAN = "" # perintah untuk audio player
 NOW = datetime.datetime.now()
+PENGUMUMAN = ""
 
 FILE_KONFIGURASI = "./config-new.json"
 
@@ -110,6 +116,32 @@ def player():
         PLAYLIST_DIMAINKAN = ""
     print_log("Player berhenti")
 
+# untuk pengumuman menggunakan text to speech
+def pengumuman():
+    global RUN, PENGUMUMAN, PLAYLIST_DIMAINKAN, DB_KONFIGURASI
+    while RUN:
+        if PENGUMUMAN != "":
+                if os.path.isfile("output.mp3"):
+                    os.remove("output.mp3")
+                print_log("Mengumumkan "+PENGUMUMAN)
+                try:
+                    res = gTTS(text=PENGUMUMAN, lang='id', slow=False)
+                    filename = "output.mp3"
+                    res.save(filename)
+                    # tunggu jika masih ada yang dimainkan
+                    if DB_KONFIGURASI["tunggu_playlist_selesai"] == "Ya" :
+                        while PLAYLIST_DIMAINKAN != "":
+                            time.sleep(1)
+                    if DB_KONFIGURASI["nada_pemberitahuan"] != "":
+                        playsound(DB_KONFIGURASI["folder_musik"]+DB_KONFIGURASI["nada_pemberitahuan"])
+                    playsound("output.mp3")
+                except Exception as e:
+                    print_log("Pengumuman gagal")
+                    print(e)
+                PENGUMUMAN = ""
+
+    time.sleep(1)
+
 # Jam
 # konsep baru
 # dalam pengecekan looping, akan dilakukan looping kedua,
@@ -181,7 +213,7 @@ def alarm():
 
 # interface untuk debug
 def interface():
-    global proses1, RUN, PLAYLIST_DIMAINKAN, JAM_SEKARANG, ALARM
+    global thread_alarm, RUN, PLAYLIST_DIMAINKAN, JAM_SEKARANG, ALARM, PENGUMUMAN
     print("\n")
     while RUN:
         perintah = input("Perintah: ")
@@ -191,47 +223,131 @@ def interface():
             ALARM=False
             # load_time()
         elif(perintah=="info"):
-            print("Jadwal : ")
-            print(DB_JADWAL[date_id()])
+            # print("Jadwal : ")
+            # print(DB_JADWAL[date_id()])
             print("Jam server           : ",time.strftime('%H:%M'))
             print("Hari                 : ",date_id())
             print("Playlist saat ini    : ",PLAYLIST_DIMAINKAN)
-            print("status thread alarm  : ",proses1.is_alive())
-            print("status thread player : ",proses2.is_alive())
+            print("status thread alarm  : ",thread_alarm.is_alive())
+            print("status thread player : ",thread_player.is_alive())
             print("Alarm berjalan       : ",ALARM)
+        elif(perintah=="pengumuman"):
+            PENGUMUMAN=input("Pengumuman : ")
         elif(perintah=="play"):
             PLAYLIST_DIMAINKAN="bell"
         elif(perintah.lower() == "quit"):
             print_log("Mematikan proses")
             # if DEBUG:
             #     print("menghentikan proses")
-            # proses1.join()
+            # thread_alarm.join()
             RUN = False
             # return
             countdown = 60
             # print_log("menunggu roses berhenti")
-            while (proses1.is_alive() | proses2.is_alive()) & countdown > 0:
+            while (thread_alarm.is_alive() | thread_player.is_alive()) & countdown > 0:
                 time.sleep(1)
             return
         else:
             print("Perintah tidak dikenali")
     RUN = False
 
+@http.route("/")
+def index():
+    return "Hello"
+
+@http.route("/api/<string:page>/<string:key>", methods=['GET', 'POST'])
+def api(page="",key=""):
+    global DB_JADWAL, DB_KONFIGURASI, DB_PLAYLIST, DB_TANGGAL_LIBUR
+    global http, RUN, ALARM, PENGUMUMAN, NOW, HARI_MASUK,JAM_SEKARANG, PLAYLIST_DIMAINKAN
+    response = ""
+    if DB_KONFIGURASI['key_api']!= key:
+        print_log("autentikasi gagal")
+        return ""
+    else:
+        if(request.method == "POST"):
+            if page == "pengumuman":
+                data = request.form.get('isi')
+                # print(data)
+                if(data == False):
+                    return "pengumuman tidak valid"
+                else:
+                    PENGUMUMAN = data
+                    return PENGUMUMAN+" akan diumumkan"
+            # elif page == "restart":
+            #     data = request.form.get('thread')
+            #     if data == False:
+            #         return ""
+            #     else:
+            #         if data == "pengumuman":
+            #             if not thread_pengumuman.is_alive():
+            #                 thread_pengumuman.start()
+            #                 return "thread pengumuman direstart"
+                # RUN = False
+                # thread_alarm.join()
+                # thread_player.join()
+                # thread_pengumuman.join()
+                # while thread_alarm.is_alive() | thread_player.is_alive() | thread_pengumuman.is_alive():
+                #     time.sleep(1)
+                # thread_alarm.start()
+                # thread_player.start()
+                # thread_pengumuman.start()
+                # os.execl(sys.executable, os.path.abspath(__file__), *sys.argv) 
+                # return "restarted"
+            else:
+                return ""
+        elif request.method == "GET":
+            if(page== "reload"):
+                # print("perintah 1")
+                load_config()
+                ALARM=False
+                # load_time()
+            elif(page=="info"):
+                # print("Jadwal : ")
+                # print(DB_JADWAL[date_id()])
+                informasi={}
+                informasi['jam']=time.strftime('%H:%M')
+                informasi['hari']=date_id()
+                informasi['playlist_dimainkan']=PLAYLIST_DIMAINKAN
+                informasi['thread_alarm']=thread_alarm.is_alive()
+                informasi['thread_player']=thread_player.is_alive()
+                informasi['thread_pengumuman']=thread_pengumuman.is_alive()
+                informasi['status_timer']=ALARM
+                return jsonify(informasi)
+                
+                # print("Jam server           : ",time.strftime('%H:%M'))
+                # print("Hari                 : ",date_id())
+                # print("Playlist saat ini    : ",PLAYLIST_DIMAINKAN)
+                # print("status thread alarm  : ",thread_alarm.is_alive())
+                # print("status thread player : ",thread_player.is_alive())
+                # print("Alarm berjalan       : ",ALARM)
+            elif(page=="pengumuman"):
+                PENGUMUMAN=input("Pengumuman : ")
+            elif(page=="play"):
+                PLAYLIST_DIMAINKAN="bell"
+            elif(page.lower() == "quit"):
+                print_log("Mematikan proses")
+                RUN = False
+            else:
+                return ""
+    return response
+
+
 if __name__ == "__main__":
     load_config()
 
     # print(waktu_alarm)
-    proses1 = threading.Thread(target=alarm)
-    proses2 = threading.Thread(target=player)
-    proses1.daemon=True
-    proses2.daemon=True
-    proses1.start()
-    proses2.start()
+    thread_alarm = threading.Thread(target=alarm, daemon=True)
+    thread_player = threading.Thread(target=player, daemon=True)
+    thread_pengumuman = threading.Thread(target=pengumuman, daemon=True)
+    thread_alarm.start()
+    thread_player.start()
+    thread_pengumuman.start()
     #radio client
     if DB_KONFIGURASI["url_stream"] != "":
         icecast_client.init(DB_KONFIGURASI["url_stream"])
     if DEBUG:
         interface()
     else:
-        while RUN:
-            time.sleep(1)
+        http.run(debug=True)
+        # while RUN:
+        #     time.sleep(1)

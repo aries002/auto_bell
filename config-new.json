@@ -18,7 +18,10 @@
     ]
     ,
     "konfigurasi":{
-        "folder_musik":"./audio/",
-        "url_stream":""
+        "folder_musik":"audio/",
+        "url_stream":"",
+        "nada_pemberitahuan":"bell.mp3",
+        "tunggu_playlist_selesai":"Ya",
+        "key_api":"123"
     }
 }

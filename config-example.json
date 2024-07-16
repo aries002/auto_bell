@@ -1,17 +1,42 @@
 {
     "jadwal":{
-        "13:00":"bell",
-        "14:52":"bell_masuk",
-        "14:54":"bell",
-        "19:12":"bell",
-        "21:32":"bell_masuk"
+        "senin":{
+            "11:07":"bell",
+            "11:09":"bell_masuk"
+        },
+        "selasa":{
+            "11:07":"bell",
+            "11:09":"bell_masuk"
+        },
+        "rabu":{
+            "11:07":"bell",
+            "11:09":"bell_masuk"
+        },"kamis":{
+            "11:07":"bell",
+            "11:09":"bell_masuk"
+        },
+        "jumat":{
+            "11:07":"bell",
+            "11:09":"bell_masuk"
+        }
     },
     "playlist": {
         "bell":["bell.mp3"],
         "bell_masuk":["bell.mp3","audio-test.mp3"]
     },
+    "tanggal_libur":[
+        "12/07/2024",
+        "14/07/2024"
+    ]
+    ,
     "konfigurasi":{
-        "folder_musik":"./audio",
-        "url_stream":""
+        "folder_musik":"audio/",
+        "url_stream":"",
+        "nada_pemberitahuan":"",
+        "tunggu_playlist_selesai":"Ya",
+        "key_api":"123",
+        "port":8311,
+        "listen":"0.0.0.0"
+
     }
 }

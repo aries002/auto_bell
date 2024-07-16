@@ -8,10 +8,14 @@ import threading
 import datetime
 from gtts import gTTS
 import os
-import sys
+import sys, getopt
 from flask import Flask, render_template, redirect, request, jsonify
 http =Flask(__name__)
 
+ARGList = sys.argv[1:]
+# Options
+options = "hf:d"
+long_options = ["Help", "file_konfig", "debug"]
 
 DEBUG = False
 RUN = True
@@ -135,7 +139,11 @@ def pengumuman():
                     os.remove("output.mp3")
                 print_log("Mengumumkan "+PENGUMUMAN)
                 try:
-                    res = gTTS(text=PENGUMUMAN, lang='id', slow=True)
+                    if DB_KONFIGURASI["kecepatan_pengejaan_tts"] == "tinggi":
+                        gtts_slow = False
+                    else:
+                        gtts_slow = True
+                    res = gTTS(text=PENGUMUMAN, lang='id', slow=gtts_slow)
                     filename = "output.mp3"
                     res.save(filename)
                     # tunggu jika masih ada yang dimainkan
@@ -272,7 +280,8 @@ def index():
         data = request.form.get('isi')
         if data != False:
             PENGUMUMAN = data
-    return render_template('index.html')
+    data = {"JADWAL":DB_JADWAL, "PLAYLIST":DB_PLAYLIST, "TANGGAL_LIBUR":DB_TANGGAL_LIBUR, "KONFIGURASI":DB_KONFIGURASI}
+    return render_template('index.html', data=data)
 
 @http.route("/api/<string:page>/<string:key>", methods=['GET', 'POST'])
 def api(page="",key=""):
@@ -321,6 +330,20 @@ def api(page="",key=""):
 
 
 if __name__ == "__main__":
+    try:
+        arguments, values = getopt.getopt(ARGList, options, long_options)
+        for currentArgument, currentValue in arguments:
+            if currentArgument in ("-h", "--Help"):
+                print("help")
+                sys.exit()
+            elif currentArgument in ("-f", "--file_konfig"):
+                FILE_KONFIGURASI = currentValue
+                print_log("Menggunakan file konfigurasi di "+FILE_KONFIGURASI)
+            elif currentArgument in ("-d", "--debug"):
+                DEBUG = True
+    except getopt.error as err:
+        print(str(err))
+        sys.exit()
     load_config()
 
     # print(waktu_alarm)

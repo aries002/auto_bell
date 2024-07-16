@@ -36,7 +36,7 @@
         "tunggu_playlist_selesai":"Ya",
         "key_api":"123",
         "port":8311,
-        "listen":"0.0.0.0"
-
+        "listen":"0.0.0.0",
+        "kecepatan_pengejaan_tts":"tinggi"
     }
 }

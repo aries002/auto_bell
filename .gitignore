@@ -164,3 +164,4 @@ test*
 audio/*
 config.json
 output.mp3
+!static/dist/

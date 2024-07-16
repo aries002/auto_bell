@@ -1,21 +1,177 @@
-<html>
-    <head>
-        <title>Pengumuman</title>
-    </head>
-    <body>
-        <form method="POST">
-            <table>
-                <tr>
-                    <td>Pengumuman</td>
-                    <td>:</td>
-                    <td><input type="text" name="isi" id="isi"></td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td><input type="submit" name="kirim"></td>
-                </tr>
-            </table>
-        </form>
-    </body>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bel</title>
+    <link rel="shortcut icon" type="image/png" href="static/favicon.ico" />
+    <link rel="stylesheet" type="text/css" media="screen" href="static/dist/select2/select2.min.css" />
+    <link href="static/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="static/dist/icons/bootstrap-icons.css" rel="stylesheet">
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="static/dist/js/jquery.1.12.4.min.js"></script>
+    <script src="static/dist/js/xlsx.full.min.js"></script>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background: #eee;
+        }
+
+        #container {
+            min-height: 100%;
+            position: relative;
+        }
+
+        #content {
+            padding: 28px 20px 20px 20px;
+            margin-top: 15px;
+            border-radius: 5px;
+            background: #FFFFFF;
+        }
+
+        #footer {
+            position: absolute;
+            bottom: 0px;
+            width: 100%;
+        }
+
+        .row {
+            margin-right: 0px;
+            margin-left: 0px;
+        }
+
+        .hide {
+            display: none;
+        }
+
+        .actbtn {
+            padding: 2px 7px;
+        }
+    </style>
+</head>
+
+<body id="body">
+    <div id="container">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarTogglerDemo01" aria-controls="navbarTogglerDemo01" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarTogglerDemo01">
+                    <a class="navbar-brand" href="/">Bel</a>
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" aria-current="pengumuman" href="#pengumuman"
+                                onclick="loadpage('pengumuman')">Pengumuman</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" aria-current="jadwal" href="#jadwal"
+                                onclick="loadpage('jadwal')">Jadwal</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" aria-current="playlist" href="#playlist"
+                                onclick="loadpage('playlist')">Playlist</a>
+                        </li>
+                    </ul>
+                    <div class="d-flex">
+                        <a class="nav-link" aria-current="reload" href="" onclick="reload()">Reload</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div id="menu" class="row">
+            <div class="col-sm-12">
+            </div>
+        </div>
+
+        <div id="content" class="container">
+
+        </div>
+        <div style="padding:30px;"></div>
+        <div id="footer" class="container-fluid">
+            <div class="col-sm-12">
+                <div class="postition-relative" style="text-align: center;margin-bottom:10px; font-size:12px;">
+                    <label style="color:#555;padding-right:10px;">Copyright &copy; Universitas Muhammadiyah
+                        Sidoarjo</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 11">
+        <div id="liveToast" class="toast align-items-center text-white border-0 bg-secondary" role="alert"
+            aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" id="toastmsg">
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                    aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const toastcss = "toast align-items-center text-white border-0 bg-";
+        const data = JSON.parse("{{ data }}".replaceAll('&#39;', '"'));
+        var liveToast = document.getElementById('liveToast');
+        var toast = "";
+        $(document).ready(function () {
+            toast = new bootstrap.Toast(liveToast);
+        });
+
+        const static = "static/modul/";
+        var namepage = window.location.hash.substr(1);
+
+        function loadpage(page = "") {
+            if (page == "") {
+                $("#content").load(static + "home.html");
+            } else if (page == "config") {
+                $("#content").load(static + page + ".html");
+            } else {
+                $("#content").html('<div style="text-align:center;">Sedang mengambil data...</div>');
+                $("#content").load(static + page + ".html");
+            }
+        }
+
+        loadpage(namepage);
+
+        function reload() {
+            $.get("/api/reload/" + data["KONFIGURASI"]["key_api"]);
+        }
+
+        function numformat(str) {
+            if (str != '') {
+                var num = str.toString().replace(/\./g, "");
+                res = num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+            } else {
+                res = 0;
+            }
+            return res;
+        }
+
+        function formatdate(date) {
+            date = new Date(date);
+            let year = date.getFullYear();
+            let month = ((date.getMonth() > 8) ? (date.getMonth() + 1) : ('0' + (date.getMonth() + 1)));
+            let day = ((date.getDate() > 9) ? date.getDate() : ('0' + date.getDate()));
+
+            return day + '-' + month + '-' + year;
+        }
+
+        var hFooter = document.getElementById('footer').clientHeight;
+        document.getElementById('content').style.paddingBottom = hFooter + "px";
+    </script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="static/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- select2 -->
+    <script type="text/javascript" src="static/dist/select2/select2.min.js"></script>
+</body>
+
 </html>

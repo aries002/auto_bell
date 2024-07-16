@@ -1,0 +1,86 @@
+<h2>Jadwal</h2>
+<hr />
+<form method="post" action="">
+    <div class="mb-3">
+        <label for="senin" class="form-label">Senin</label>
+        <div id="jamsenin"></div>
+        <div>
+            <button type="button" class="btn btn-success btn-sm" onclick="addjam('senin',1)">
+                <i class="bi bi-plus"></i></button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="addjam('senin',-1)">
+                <i class="bi bi-dash"></i></button>
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="selasa" class="form-label">Selasa</label>
+        <div id="jamselasa"></div>
+        <div>
+            <button type="button" class="btn btn-success btn-sm" onclick="addjam('selasa',1)">
+                <i class="bi bi-plus"></i></button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="addjam('selasa',-1)">
+                <i class="bi bi-dash"></i></button>
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="rabu" class="form-label">Rabu</label>
+        <div id="jamrabu"></div>
+        <div>
+            <button type="button" class="btn btn-success btn-sm" onclick="addjam('rabu',1)">
+                <i class="bi bi-plus"></i></button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="addjam('rabu',-1)">
+                <i class="bi bi-dash"></i></button>
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="kamis" class="form-label">Kamis</label>
+        <div id="jamkamis"></div>
+        <div>
+            <button type="button" class="btn btn-success btn-sm" onclick="addjam('kamis',1)">
+                <i class="bi bi-plus"></i></button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="addjam('kamis',-1)">
+                <i class="bi bi-dash"></i></button>
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="jumat" class="form-label">Jumat</label>
+        <div id="jamjumat"></div>
+        <div>
+            <button type="button" class="btn btn-success btn-sm" onclick="addjam('jumat',1)">
+                <i class="bi bi-plus"></i></button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="addjam('jumat',-1)">
+                <i class="bi bi-dash"></i></button>
+        </div>
+    </div>
+    <div class="mb-3">
+        <input type="button" name="simpan" value="Simpan" class="btn btn-primary">
+    </div>
+</form>
+
+<script>
+    $(document).ready(function () {
+        let jadwal = data["JADWAL"];
+        for (hari in jadwal) {
+            for (jam in jadwal[hari]) {
+                // console.log(jam);
+                addjam(hari, 1, jam, jadwal[hari][jam]);
+            }
+        }
+    });
+
+
+    function addjam(id = "", add = 1, jam = "", kode = "") {
+        if (add == 1) {
+            $("#jam" + id).append(`<div class="row mb-2 njam${id}">
+                <div class="col-sm-2">
+                    <input type="time" class="form-control injam${id}" placeholder="Jam" value="${jam}"/>
+                </div>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control inkode${id}" placeholder="Kode" value="${kode}"/>
+                </div>
+            </div>`);
+        } else {
+            let njam = document.getElementsByClassName("njam" + id);
+            njam[njam.length - 1].parentNode.removeChild(njam[njam.length - 1]);
+        }
+    }
+</script>

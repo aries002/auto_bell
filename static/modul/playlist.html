@@ -1,0 +1,52 @@
+<h2>Playlist</h2>
+<hr />
+<form method="post" action="">
+    <div class="mb-3">
+        <div id="playlist"></div>
+    </div>
+    <div class="mb-3">
+        <input type="button" name="simpan" value="Simpan" class="btn btn-primary">
+    </div>
+</form>
+
+<script>
+    let listcode = [];
+    $(document).ready(function () {
+        let jadwal = data["JADWAL"];
+        for (hari in jadwal) {
+            for (jam in jadwal[hari]) {
+                if (!listcode.includes(jadwal[hari][jam])) {
+                    listcode.push(jadwal[hari][jam]);
+                    let kode = jadwal[hari][jam];
+                    $("#playlist").append(`<div class="row mb-2 listcode">
+                        <b>${kode}</b>
+                        <div id="${kode}" style="margin-left:15px;"></div>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-success btn-sm" onclick="addlist('${kode}',1)">
+                            <i class="bi bi-plus"></i></button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="addlist('${kode}',-1)">
+                            <i class="bi bi-dash"></i></button>
+                    </div>`);
+
+                    let listing = data["PLAYLIST"];
+                    for (list in listing[kode]) {
+                        addlist(kode, 1, listing[kode][list]);
+                    }
+                }
+            }
+        }
+    });
+
+
+    function addlist(id = "", add = 1, value = "") {
+        if (add == 1) {
+            $("#" + id).append(`<div class="row mb-2 nval${id}">
+                    <input type="text" class="form-control kdval${id}" value="${value}"/>
+                </div>`);
+        } else {
+            let nval = document.getElementsByClassName("nval" + id);
+            nval[nval.length - 1].parentNode.removeChild(nval[nval.length - 1]);
+        }
+    }
+</script>

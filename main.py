@@ -128,6 +128,7 @@ def player():
                 print_log("Playlist tidak ditemukan")
         PLAYLIST_DIMAINKAN = ""
     print_log("Modul player berhenti")
+    time.sleep(0.5)
 
 # untuk pengumuman menggunakan text to speech
 def pengumuman():

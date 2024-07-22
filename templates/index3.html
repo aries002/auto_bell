@@ -107,7 +107,7 @@
     </div>
 
     <div class="position-fixed top-0 end-0 p-3" style="z-index: 11">
-        <div id="liveToast" class="toast align-items-center text-white border-0 bg-primary" role="alert"
+        <div id="liveToast" class="toast align-items-center text-white border-0 bg-secondary" role="alert"
             aria-live="assertive" aria-atomic="true">
             <div class="d-flex">
                 <div class="toast-body" id="toastmsg">
@@ -117,7 +117,6 @@
             </div>
         </div>
     </div>
-
     <script>
         const toastcss = "toast align-items-center text-white border-0 bg-";
         const data = JSON.parse("{{ data }}".replaceAll('&#39;', '"'));
@@ -125,15 +124,7 @@
         var toast = "";
         $(document).ready(function () {
             toast = new bootstrap.Toast(liveToast);
-            liveToast.addEventListener('hidden.bs.toast', function () {
-                $("#toastmsg").html("");
-            })
         });
-
-        function makeToast(str = "") {
-            $("#toastmsg").html(str);
-            toast.show();
-        }
 
         const static = "static/modul/";
         var namepage = window.location.hash.substr(1);

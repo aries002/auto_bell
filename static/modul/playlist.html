@@ -5,7 +5,7 @@
         <div id="playlist"></div>
     </div>
     <div class="mb-3">
-        <input type="button" name="simpan" value="Simpan" class="btn btn-primary">
+        <input type="button" id="simpan" value="Simpan" class="btn btn-primary">
     </div>
 </form>
 
@@ -19,7 +19,7 @@
                     listcode.push(jadwal[hari][jam]);
                     let kode = jadwal[hari][jam];
                     $("#playlist").append(`<div class="row mb-2 listcode">
-                        <b>${kode}</b>
+                        <b class="kodeplaylist">${kode}</b>
                         <div id="${kode}" style="margin-left:15px;"></div>
                     </div>
                     <div>
@@ -36,6 +36,32 @@
                 }
             }
         }
+
+        $("#simpan").click(function () {
+            let playlist = {};
+            let kodeplaylist = document.getElementsByClassName("kodeplaylist");
+            for (let i = 0; i < kodeplaylist.length; i++) {
+                let nokode = kodeplaylist[i].innerHTML;
+                let audio = document.getElementsByClassName("kdval" + nokode);
+                // console.log(audio);
+                playlist[nokode] = [];
+                for (let j = 0; j < audio.length; j++) {
+                    playlist[nokode].push(audio[j].value);
+                }
+            }
+
+            // console.log(playlist);
+
+            $.ajax({
+                type: "POST",
+                url: window.location.pathname,
+                data: { "playlist": JSON.stringify(playlist) },
+                success: function (data) {
+                    // console.log(data);
+                    makeToast("Data disimpan");
+                }
+            });
+        });
     });
 
 

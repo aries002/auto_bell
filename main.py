@@ -32,7 +32,7 @@ PLAYLIST_DIMAINKAN = "" # perintah untuk audio player
 MUSIK_DIMAINKAN = ""
 
 FILE_KONFIGURASI = "./config.json"
-
+PENANDA_PLAYLIST = "PEMBUKA"
 DB_PLAYLIST =[]
 DB_JADWAL = []
 DB_KONFIGURASI = []
@@ -104,12 +104,14 @@ def load_config():
 
 
 def get_playlist(playlist = ""):
+    global DB_PLAYLIST
     if playlist in DB_PLAYLIST:
         return DB_PLAYLIST[playlist]
     else:
         return ""
 
 def tts_to_mp3(teks = "", nama_file = "", bahasa = "id"):
+    global DB_KONFIGURASI
     lokasi_file = DB_KONFIGURASI["lokasi_musik"]+"tts/"
     if not os.path.exists(lokasi_file):
         os.makedirs(lokasi_file)
@@ -127,6 +129,8 @@ def tts_to_mp3(teks = "", nama_file = "", bahasa = "id"):
 
 def music_player():
     # global media_player
+    global DB_KONFIGURASI
+    global Run, MUSIC, MUSIK_DIMAINKAN
     while Run:
         if MUSIK_DIMAINKAN != "" & MUSIC:
             playlist = get_playlist(MUSIK_DIMAINKAN)
@@ -154,12 +158,13 @@ def load_time(jadwal=[]):
 
 # Audio player
 def player():
-    # global PLAYLIST_DIMAINKAN
+    global DB_KONFIGURASI, DB_PLAYLIST
+    global Run, PLAYLIST_DIMAINKAN, MUSIK_DIMAINKAN
     print_log("Modul player dijalankan")
     while Run:
         if(PLAYLIST_DIMAINKAN != ""):
             nama_playlist = PLAYLIST_DIMAINKAN
-            if nama_playlist.startwith("Musik pembuka"):
+            if nama_playlist.startwith(PENANDA_PLAYLIST):
                 MUSIK_DIMAINKAN = nama_playlist
                 # PLAYIST_DIMAINKAN = ""
             else:
@@ -334,46 +339,63 @@ def index():
 @http.route("/api/<string:page>/<string:key>", methods=['GET', 'POST'])
 def api(page="",key=""):
     global DB_JADWAL, DB_KONFIGURASI, DB_PLAYLIST, DB_TANGGAL_LIBUR
-    global http, Run, ALARM, PENGUMUMAN, NOW, HARI_MASUK,JAM_SEKARANG, PLAYLIST_DIMAINKAN
+    global http, Run, ALARM, PENGUMUMAN, NOW, HARI_MASUK,JAM_SEKARANG, PLAYLIST_DIMAINKAN, MUSIC
+
     response = ""
     if DB_KONFIGURASI['key_api']!= key:
         print_log("autentikasi gagal")
         return ""
+    if request.method == "POST":
+        post = True
     else:
-        if(request.method == "POST"):
-            if page == "pengumuman":
-                data = request.form.get('isi')
-                # print(data)
-                if(data == False):
-                    return "pengumuman tidak valid"
-                else:
-                    PENGUMUMAN = data
-                    return PENGUMUMAN+" akan diumumkan"
+        post = False
+    
+
+    if page == "pengumuman":
+        if post:
+            data = request.form.get('isi')
+            # print(data)
+            if(data == False):
+                response = "pengumuman tidak valid"
             else:
-                return ""
-        elif request.method == "GET":
-            if(page== "reload"):
-                load_config()
-                ALARM=False
-            elif(page=="info"):
-                informasi={}
-                informasi['jam']=time.strftime('%H:%M')
-                informasi['hari']=date_id()
-                informasi['playlist_dimainkan']=PLAYLIST_DIMAINKAN
-                informasi['thread_alarm']=thread_alarm.is_alive()
-                informasi['thread_player']=thread_player.is_alive()
-                informasi['thread_pengumuman']=thread_pengumuman.is_alive()
-                informasi['status_timer']=ALARM
-                return jsonify(informasi)
-            elif(page=="pengumuman"):
-                PENGUMUMAN=input("Pengumuman : ")
-            elif(page=="play"):
-                PLAYLIST_DIMAINKAN="bell"
-            elif(page.lower() == "quit"):
-                print_log("Mematikan proses")
-                Run = False
+                PENGUMUMAN = data
+                response = PENGUMUMAN+" akan diumumkan"
+    elif page == "info":
+        informasi={}
+        informasi['jam']=time.strftime('%H:%M')
+        informasi['hari']=date_id()
+        informasi['playlist_dimainkan']=PLAYLIST_DIMAINKAN
+        informasi['thread_alarm']=thread_alarm.is_alive()
+        informasi['thread_player']=thread_player.is_alive()
+        informasi['thread_pengumuman']=thread_pengumuman.is_alive()
+        informasi['status_timer']=ALARM
+        response = jsonify(informasi)
+    elif(page== "reload"):
+        load_config()
+        ALARM = False
+        MUSIC = False
+        response = ""
+    elif page == "play":
+        if post:
+            playlist = request.form.get('playlist')
+            if playlist in DB_PLAYLIST:
+                PLAYLIST_DIMAINKAN = playlist
+                response = ""
             else:
-                return ""
+                err['stat'] = True
+                err['pesan'] = "playlist tidak ditemukan"
+                response = jsonify(err)
+    elif page == "text2mp3":
+        if post:
+            text = request.form.get('text')
+            nama_file = request.form.get('nama_file')
+            if text != "" & nama_file != "":
+                tts_to_mp3(text, nama_file)
+
+    else:
+        err["stat"] = True
+        err["pesan"] = "404 not found"
+        response = jsonify(err)
     return response
 
 

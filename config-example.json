@@ -22,7 +22,8 @@
     },
     "playlist": {
         "bell":["bell.mp3"],
-        "bell_masuk":["bell.mp3","audio-test.mp3"]
+        "bell_masuk":["bell.mp3","audio-test.mp3"],
+        "PEMBUKA bell_masuk":["audio-test.mp3"]
     },
     "tanggal_libur":[
         "12/07/2024",

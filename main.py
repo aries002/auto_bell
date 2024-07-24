@@ -21,30 +21,30 @@ long_options = ["Help", "file_konfig", "debug"]
 
 DEBUG = False
 Run = True
-ALARM = False
-MUSIC = False
+Alarm = False
+Music = False
 # waktu_alarm = []
-JAM_SEKARANG = time.strftime('%H:%M') #jam
-NOW = datetime.datetime.now()
-HARI_MASUK = []
-PENGUMUMAN = ""
-PLAYLIST_DIMAINKAN = "" # perintah untuk audio player
-MUSIK_DIMAINKAN = ""
+jam_sekarang = time.strftime('%H:%M') #jam
+Now = datetime.datetime.now()
+Hari_masuk = []
+Pengumuman = ""
+Bell_dimainkan = "" # perintah untuk audio player
+Musik_dimainkan = ""
 
 FILE_KONFIGURASI = "./config.json"
 PENANDA_PLAYLIST = "PEMBUKA"
-DB_PLAYLIST =[]
-DB_JADWAL = []
-DB_KONFIGURASI = []
-DB_TANGGAL_LIBUR = []
+DB_playlist =[]
+DB_jadwal = []
+DB_konfigurasi = []
+DB_libur = []
 
 def print_log(pesan):
-    waktu = time.strftime('[%b %d  %H:%M:%S] ')
+    waktu = time.strftime('\n[%b %d  %H:%M:%S] ')
     pesan = waktu + pesan
     print(pesan)
 
 # Hari dalam bahasa indonesia
-def date_id(day=NOW.strftime("%A"),cap = False):
+def date_id(day=Now.strftime("%A"),cap = False):
     day = day.lower()
     if day == "monday":
         day = "senin"
@@ -67,7 +67,7 @@ def date_id(day=NOW.strftime("%A"),cap = False):
     return day
 
 def load_config():
-    global DB_PLAYLIST, HARI_MASUK, DB_JADWAL, DB_KONFIGURASI, DB_TANGGAL_LIBUR
+    global DB_playlist, Hari_masuk, DB_jadwal, DB_konfigurasi, DB_libur
 
     file = open(FILE_KONFIGURASI)
     try:
@@ -77,45 +77,49 @@ def load_config():
         print(err)
     else:
         print_log("Mengupdate konfigurasi")
-        DB_PLAYLIST.clear()
-        DB_PLAYLIST = data["playlist"]
-        DB_JADWAL.clear()
-        DB_JADWAL = data["jadwal"]
-        DB_KONFIGURASI.clear()
-        DB_KONFIGURASI = data["konfigurasi"]
-        DB_TANGGAL_LIBUR.clear()
-        DB_TANGGAL_LIBUR = data["tanggal_libur"]
+        DB_playlist.clear()
+        DB_playlist = data["playlist"]
+        DB_jadwal.clear()
+        DB_jadwal = data["jadwal"]
+        DB_konfigurasi.clear()
+        DB_konfigurasi = data["konfigurasi"]
+        DB_libur.clear()
+        DB_libur = data["tanggal_libur"]
     if DEBUG:
         print("\nKonfigurasi :")
-        print(DB_KONFIGURASI)
+        print(DB_konfigurasi)
         print("\nJadwal :")
-        print(DB_JADWAL)
+        print(DB_jadwal)
         print("\nPlaylist :")
-        print(DB_PLAYLIST)
+        print(DB_playlist)
         print("\nTanggal libur :")
-        print(DB_TANGGAL_LIBUR)
+        print(DB_libur)
         print("\n")
     file.close()
-    for key in DB_JADWAL:
+    for key in DB_jadwal:
         hari = key
-        HARI_MASUK.append(hari)
+        Hari_masuk.append(hari)
     if DEBUG:
-        print(HARI_MASUK)
-
+        print(Hari_masuk)
 
 def get_playlist(playlist = ""):
-    global DB_PLAYLIST
-    if playlist in DB_PLAYLIST:
-        return DB_PLAYLIST[playlist]
+    global DB_playlist
+    if playlist in DB_playlist:
+        return DB_playlist[playlist]
     else:
         return ""
 
-def tts_to_mp3(teks = "", nama_file = "", bahasa = "id"):
-    global DB_KONFIGURASI
-    lokasi_file = DB_KONFIGURASI["lokasi_musik"]+"tts/"
+def tts_to_mp3(teks = "", nama_file = "", bahasa = "id", overwrite = True):
+    global DB_konfigurasi
+    lokasi_file = DB_konfigurasi["folder_musik"]+"tts/"
     if not os.path.exists(lokasi_file):
         os.makedirs(lokasi_file)
-    if DB_KONFIGURASI["kecepatan_pengejaan_tts"] == "tinggi":
+    if os.path.isfile(lokasi_file+nama_file):
+        if overwrite:
+            os.remove(lokasi_file+nama_file)
+        else:
+            return False
+    if DB_konfigurasi["kecepatan_pengejaan_tts"] == "tinggi":
         gtts_slow = False
     else:
         gtts_slow = True
@@ -129,22 +133,25 @@ def tts_to_mp3(teks = "", nama_file = "", bahasa = "id"):
 
 def music_player():
     # global media_player
-    global DB_KONFIGURASI
-    global Run, MUSIC, MUSIK_DIMAINKAN
+    global DB_konfigurasi
+    global Run, Music, Musik_dimainkan
+    print_log("Modul musik dijalankan")
     while Run:
-        if MUSIK_DIMAINKAN != "" & MUSIC:
-            playlist = get_playlist(MUSIK_DIMAINKAN)
+        if Musik_dimainkan != "" and Music:
+            playlist = get_playlist(Musik_dimainkan)
             for musik in playlist:
-                if not MUSIC:
+                if not Music:
                     break
-                # media = vlc.Media(DB_KONFIGURASI['folder_musik']+musik)
-                media_player = vlc.MediaPlayer(DB_KONFIGURASI['folder_musik']+musik)
+                # media = vlc.Media(DB_konfigurasi['folder_musik']+musik)
+                media_player = vlc.MediaPlayer(DB_konfigurasi['folder_musik']+musik)
                 media_player.play()
                 time.sleep(1)
-                while media_player.is_playing() & MUSIC:
+                print_log("VLC Memainkan "+musik)
+                while media_player.is_playing() & Music:
                     time.sleep(1)
                 media_player.stop()
                 time.sleep(0.5)
+            Musik_dimainkan = ""
         time.sleep(0.5)
 
 # ambil update schadule
@@ -158,19 +165,21 @@ def load_time(jadwal=[]):
 
 # Audio player
 def player():
-    global DB_KONFIGURASI, DB_PLAYLIST
-    global Run, PLAYLIST_DIMAINKAN, MUSIK_DIMAINKAN
+    global DB_konfigurasi, DB_playlist
+    global Run, Bell_dimainkan, Musik_dimainkan, Music
     print_log("Modul player dijalankan")
     while Run:
-        if(PLAYLIST_DIMAINKAN != ""):
-            nama_playlist = PLAYLIST_DIMAINKAN
-            if nama_playlist.startwith(PENANDA_PLAYLIST):
-                MUSIK_DIMAINKAN = nama_playlist
+        if(Bell_dimainkan != ""):
+            nama_playlist = Bell_dimainkan
+            if nama_playlist.startswith(PENANDA_PLAYLIST):
+                Musik_dimainkan = nama_playlist
+                Music = True
                 # PLAYIST_DIMAINKAN = ""
             else:
-                playing = get_playlist(PLAYLIST_DIMAINKAN)
+                Music = False
+                playing = get_playlist(Bell_dimainkan)
                 for play in playing:
-                    play = DB_KONFIGURASI["folder_musik"]+play
+                    play = DB_konfigurasi["folder_musik"]+play
                     if DEBUG:
                         print_log("playing "+play)
                     try:
@@ -178,34 +187,34 @@ def player():
                     except Exception as error:
                         print_log("Gagal memainkan "+play)
                         print(error)
-        PLAYLIST_DIMAINKAN = ""
+        Bell_dimainkan = ""
         time.sleep(0.5)
     print_log("Modul player berhenti")
 
 # untuk pengumuman menggunakan text to speech
 def pengumuman():
-    global Run, PENGUMUMAN, PLAYLIST_DIMAINKAN, DB_KONFIGURASI
-    print_log("Modul pengumumang dijalankan")
+    global Run, Pengumuman, Bell_dimainkan, DB_konfigurasi
+    print_log("Modul pengumuman dijalankan")
     while Run:
-        if PENGUMUMAN != "":
+        if Pengumuman != "":
                 if os.path.isfile("output.mp3"):
                     os.remove("output.mp3")
-                print_log("Mengumumkan "+PENGUMUMAN)
+                print_log("Mengumumkan "+Pengumuman)
                 try:
-                    if DB_KONFIGURASI["kecepatan_pengejaan_tts"] == "tinggi":
+                    if DB_konfigurasi["kecepatan_pengejaan_tts"] == "tinggi":
                         gtts_slow = False
                     else:
                         gtts_slow = True
-                    res = gTTS(text=PENGUMUMAN, lang='id', slow=gtts_slow)
+                    res = gTTS(text=Pengumuman, lang='id', slow=gtts_slow)
                     filename = "output.mp3"
                     res.save(filename)
                     # tunggu jika masih ada yang dimainkan
-                    if DB_KONFIGURASI["tunggu_playlist_selesai"] == "Ya" :
-                        while PLAYLIST_DIMAINKAN != "":
+                    if DB_konfigurasi["tunggu_playlist_selesai"] == "Ya" :
+                        while Bell_dimainkan != "":
                             time.sleep(1)
                     try:
-                        if DB_KONFIGURASI["nada_pemberitahuan"] != "":
-                            playsound(DB_KONFIGURASI["folder_musik"]+DB_KONFIGURASI["nada_pemberitahuan"])
+                        if DB_konfigurasi["nada_pemberitahuan"] != "":
+                            playsound(DB_konfigurasi["folder_musik"]+DB_konfigurasi["nada_pemberitahuan"])
                         playsound("output.mp3")
                     except Exception as error:
                         print_log("Gagal memainkan audio")
@@ -213,55 +222,56 @@ def pengumuman():
                 except Exception as e:
                     print_log("Pengumuman gagal")
                     print(e)
-                PENGUMUMAN = ""
+                Pengumuman = ""
         time.sleep(1)
     print_log("Modul pengumuman berhenti")
+
 # Jam
 # konsep baru
 # dalam pengecekan looping, akan dilakukan looping kedua,
-# dimana looping kedua akan melakukan looping selama setatus ALARM True, sedangkan looping utama akan sesuai dengan status program
+# dimana looping kedua akan melakukan looping selama setatus Alarm True, sedangkan looping utama akan sesuai dengan status program
 # status alarm akan dirubah sesuai dengan hari yang akan dicek oleh looping utama dan dicek oleh looping alarm
 # dalam pengecekan di looping alarm, akadn dicek apakah hari ini masih sama dengan hari yang dijalankan
 # dalam pengecekkan looping utama akan dicek apakah hari ini libur atau tidak 
 def alarm():
-    global JAM_SEKARANG, Run, PLAYLIST_DIMAINKAN, HARI_MASUK, ALARM, NOW
+    global jam_sekarang, Run, Bell_dimainkan, Hari_masuk, Alarm, Now
     if DEBUG:
-        print(NOW.strftime("%d/%m/%Y"))
+        print(Now.strftime("%d/%m/%Y"))
     # load_time()
     # if DEBUG:
     #     print("jam alarm : ", waktu_alarm)
     #     # print(waktu_alarm)
     print_log("Modul timer dijalankan")
     while Run:
-        ALARM = False
+        Alarm = False
         hari_ini = date_id()
-        NOW = datetime.datetime.now()
-        tanggal = NOW.strftime("%d/%m/%Y")
+        Now = datetime.datetime.now()
+        tanggal = Now.strftime("%d/%m/%Y")
         
         #pengecekkan hari libur
-        for hari in HARI_MASUK:
+        for hari in Hari_masuk:
             if hari == hari_ini:
                 #pengecekkan tanggal libur
-                for tgl in DB_TANGGAL_LIBUR:
+                for tgl in DB_libur:
                     # print(tgl)
-                    ALARM = True
+                    Alarm = True
                     if tgl == tanggal:
-                        ALARM = False
+                        Alarm = False
                 # time.sleep(100)
         #perulangan yang baru
-        if ALARM:
-            while ALARM & Run:
-                jam_alarm = load_time(DB_JADWAL[hari_ini])
-                JAM_SEKARANG = time.strftime('%H:%M')
+        if Alarm:
+            while Alarm & Run:
+                jam_alarm = load_time(DB_jadwal[hari_ini])
+                jam_sekarang = time.strftime('%H:%M')
                 for alarm in jam_alarm:
-                    if JAM_SEKARANG == alarm:
-                        PLAYLIST_DIMAINKAN = DB_JADWAL[hari_ini][JAM_SEKARANG]
-                        print_log("Memainkan playlist "+PLAYLIST_DIMAINKAN)
+                    if jam_sekarang == alarm:
+                        Bell_dimainkan = DB_jadwal[hari_ini][jam_sekarang]
+                        print_log("Memainkan playlist "+Bell_dimainkan)
                         time.sleep(59)
                 #cek apakah sudah berganti hari
                 time.sleep(1)
                 if(hari_ini != date_id()):
-                    ALARM=False
+                    Alarm=False
                     print_log("Perhantian hari jadwal direset!")
         else:
             time.sleep(60)
@@ -269,28 +279,28 @@ def alarm():
 
 # interface untuk debug
 def interface():
-    global thread_alarm, Run, PLAYLIST_DIMAINKAN, JAM_SEKARANG, ALARM, PENGUMUMAN
+    global thread_alarm, Run, Bell_dimainkan, jam_sekarang, Alarm, Pengumuman
     print("\n")
     while Run:
         perintah = input("Perintah: ")
         if(perintah== "reload"):
             # print("perintah 1")
             load_config()
-            ALARM=False
+            Alarm=False
             # load_time()
         elif(perintah=="info"):
             # print("Jadwal : ")
-            # print(DB_JADWAL[date_id()])
+            # print(DB_jadwal[date_id()])
             print("Jam server           : ",time.strftime('%H:%M'))
             print("Hari                 : ",date_id())
-            print("Playlist saat ini    : ",PLAYLIST_DIMAINKAN)
+            print("Playlist saat ini    : ",Bell_dimainkan)
             print("status thread alarm  : ",thread_alarm.is_alive())
             print("status thread player : ",thread_player.is_alive())
-            print("Alarm berjalan       : ",ALARM)
+            print("Alarm berjalan       : ",Alarm)
         elif(perintah=="pengumuman"):
-            PENGUMUMAN=input("Pengumuman : ")
+            Pengumuman=input("Pengumuman : ")
         elif(perintah=="play"):
-            PLAYLIST_DIMAINKAN="bell"
+            Bell_dimainkan="bell"
         elif(perintah.lower() == "quit"):
             print_log("Mematikan proses")
             # if DEBUG:
@@ -309,18 +319,18 @@ def interface():
 
 @http.route("/", methods=['GET', 'POST'])
 def index():
-    global PENGUMUMAN, DB_JADWAL, DB_PLAYLIST
+    global Pengumuman, DB_jadwal, DB_playlist
     POST = '{}'
     if request.method == 'POST':
         POST = json.dumps(request.form)
         # print(request.form)
         if "isi" in request.form:
-            PENGUMUMAN = request.form.get('isi')
+            Pengumuman = request.form.get('isi')
         elif "jadwal" in request.form:
             jadwal = request.form.get('jadwal')
             file_conf = json.load(open(FILE_KONFIGURASI))
             file_conf['jadwal'] = json.loads(jadwal)
-            DB_JADWAL = json.loads(jadwal)
+            DB_jadwal = json.loads(jadwal)
             # print(json.dumps(file_conf, indent=4))
             with open(FILE_KONFIGURASI, 'w') as outfile:
                 json.dump(file_conf, outfile, indent=4)
@@ -328,28 +338,27 @@ def index():
             playlist = request.form.get('playlist')
             file_conf = json.load(open(FILE_KONFIGURASI))
             file_conf['playlist'] = json.loads(playlist)
-            DB_PLAYLIST = json.loads(playlist)
+            DB_playlist = json.loads(playlist)
             # print(json.dumps(file_conf, indent=4))
             with open(FILE_KONFIGURASI, 'w') as outfile:
                 json.dump(file_conf, outfile, indent=4)
 
-    data = {"JADWAL":DB_JADWAL, "PLAYLIST":DB_PLAYLIST, "TANGGAL_LIBUR":DB_TANGGAL_LIBUR, "KONFIGURASI":DB_KONFIGURASI,"POST":json.loads(POST)}
+    data = {"JADWAL":DB_jadwal, "PLAYLIST":DB_playlist, "TANGGAL_LIBUR":DB_libur, "KONFIGURASI":DB_konfigurasi,"POST":json.loads(POST)}
     return render_template('index.html', data=data)
 
 @http.route("/api/<string:page>/<string:key>", methods=['GET', 'POST'])
 def api(page="",key=""):
-    global DB_JADWAL, DB_KONFIGURASI, DB_PLAYLIST, DB_TANGGAL_LIBUR
-    global http, Run, ALARM, PENGUMUMAN, NOW, HARI_MASUK,JAM_SEKARANG, PLAYLIST_DIMAINKAN, MUSIC
+    global DB_jadwal, DB_konfigurasi, DB_playlist, DB_libur
+    global http, Run, Alarm, Pengumuman, Now, Hari_masuk,jam_sekarang, Bell_dimainkan, Music
 
     response = ""
-    if DB_KONFIGURASI['key_api']!= key:
+    if DB_konfigurasi['key_api']!= key:
         print_log("autentikasi gagal")
         return ""
     if request.method == "POST":
         post = True
     else:
         post = False
-    
 
     if page == "pengumuman":
         if post:
@@ -358,39 +367,45 @@ def api(page="",key=""):
             if(data == False):
                 response = "pengumuman tidak valid"
             else:
-                PENGUMUMAN = data
-                response = PENGUMUMAN+" akan diumumkan"
+                Pengumuman = data
+                response = Pengumuman+" akan diumumkan"
+
     elif page == "info":
         informasi={}
         informasi['jam']=time.strftime('%H:%M')
         informasi['hari']=date_id()
-        informasi['playlist_dimainkan']=PLAYLIST_DIMAINKAN
+        informasi['playlist_dimainkan']=Bell_dimainkan
         informasi['thread_alarm']=thread_alarm.is_alive()
         informasi['thread_player']=thread_player.is_alive()
         informasi['thread_pengumuman']=thread_pengumuman.is_alive()
-        informasi['status_timer']=ALARM
+        informasi['status_timer']=Alarm
         response = jsonify(informasi)
+
     elif(page== "reload"):
         load_config()
-        ALARM = False
-        MUSIC = False
+        Alarm = False
+        Music = False
         response = ""
     elif page == "play":
         if post:
             playlist = request.form.get('playlist')
-            if playlist in DB_PLAYLIST:
-                PLAYLIST_DIMAINKAN = playlist
+            if playlist in DB_playlist:
+                Bell_dimainkan = playlist
                 response = ""
             else:
                 err['stat'] = True
                 err['pesan'] = "playlist tidak ditemukan"
                 response = jsonify(err)
+        elif DEBUG:
+            Bell_dimainkan = "bell"
     elif page == "text2mp3":
         if post:
             text = request.form.get('text')
             nama_file = request.form.get('nama_file')
-            if text != "" & nama_file != "":
+            if text != "" and nama_file != "":
                 tts_to_mp3(text, nama_file)
+        else:
+            return render_template("text2mp3.html")
 
     else:
         err["stat"] = True
@@ -420,15 +435,17 @@ if __name__ == "__main__":
     thread_alarm = threading.Thread(target=alarm, daemon=True)
     thread_player = threading.Thread(target=player, daemon=True)
     thread_pengumuman = threading.Thread(target=pengumuman, daemon=True)
+    thread_music_player = threading.Thread(target=music_player, daemon=True)
     thread_alarm.start()
     thread_player.start()
     thread_pengumuman.start()
+    thread_music_player.start()
     #radio client
-    # if DB_KONFIGURASI["url_stream"] != "":
-    #     icecast_client.init(DB_KONFIGURASI["url_stream"])
+    # if DB_konfigurasi["url_stream"] != "":
+    #     icecast_client.init(DB_konfigurasi["url_stream"])
     # if DEVELOP:
     #     interface()
     # else:
-    http.run(debug=DEBUG,host=DB_KONFIGURASI['listen'],port=DB_KONFIGURASI['port'])
+    http.run(debug=DEBUG,host=DB_konfigurasi['listen'],port=DB_konfigurasi['port'])
         # while Run:
         #     time.sleep(1)

@@ -351,6 +351,7 @@ def api(page="",key=""):
     global DB_jadwal, DB_konfigurasi, DB_playlist, DB_libur
     global http, Run, Alarm, Pengumuman, Now, Hari_masuk,jam_sekarang, Bell_dimainkan, Music
 
+    err = []
     response = ""
     if DB_konfigurasi['key_api']!= key:
         print_log("autentikasi gagal")

@@ -351,7 +351,7 @@ def api(page="",key=""):
     global DB_jadwal, DB_konfigurasi, DB_playlist, DB_libur
     global http, Run, Alarm, Pengumuman, Now, Hari_masuk,jam_sekarang, Bell_dimainkan, Music
 
-    err = []
+    err = {}
     response = ""
     if DB_konfigurasi['key_api']!= key:
         print_log("autentikasi gagal")
@@ -394,7 +394,7 @@ def api(page="",key=""):
                 Bell_dimainkan = playlist
                 response = ""
             else:
-                err['stat'] = True
+                err['err'] = True
                 err['pesan'] = "playlist tidak ditemukan"
                 response = jsonify(err)
         elif DEBUG:
@@ -409,7 +409,7 @@ def api(page="",key=""):
             return render_template("text2mp3.html")
 
     else:
-        err["stat"] = True
+        err["err"] = True
         err["pesan"] = "404 not found"
         response = jsonify(err)
     return response

@@ -1,9 +1,8 @@
 [Unit]
 Description=Bell otomatis
-After=network.target
+After=sound.target
 
 [Service]
-User=admin
 WorkingDirectory=/home/admin/auto_bell
 ExecStart=/usr/bin/python3 /home/admin/auto_bell/main.py -f /home/admin/Music/config.json
 Restart=always

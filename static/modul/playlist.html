@@ -5,44 +5,34 @@
         <div id="playlist"></div>
     </div>
     <div class="mb-3">
-        <input type="button" id="simpan" value="Simpan" class="btn btn-primary">
+        <button type="button" class="btn btn-success btn-sm" onclick="addplay(1)">
+            <i class="bi bi-plus"></i> Add Playlist</button>
+        <button type="button" class="btn btn-danger btn-sm" onclick="addplay(-1)">
+            <i class="bi bi-dash"></i> Min Playlist</button>
     </div>
+    <input type="button" id="simpan" value="Simpan" class="btn btn-primary">
 </form>
 
 <script>
-    let listcode = [];
+    let nolist = 0;
     $(document).ready(function () {
-        let jadwal = data["JADWAL"];
-        for (hari in jadwal) {
-            for (jam in jadwal[hari]) {
-                if (!listcode.includes(jadwal[hari][jam])) {
-                    listcode.push(jadwal[hari][jam]);
-                    let kode = jadwal[hari][jam];
-                    $("#playlist").append(`<div class="row mb-2 listcode">
-                        <b class="kodeplaylist">${kode}</b>
-                        <div id="${kode}" style="margin-left:15px;"></div>
-                    </div>
-                    <div>
-                        <button type="button" class="btn btn-success btn-sm" onclick="addlist('${kode}',1)">
-                            <i class="bi bi-plus"></i></button>
-                        <button type="button" class="btn btn-danger btn-sm" onclick="addlist('${kode}',-1)">
-                            <i class="bi bi-dash"></i></button>
-                    </div>`);
-
-                    let listing = data["PLAYLIST"];
-                    for (list in listing[kode]) {
-                        addlist(kode, 1, listing[kode][list]);
-                    }
-                }
+        let audiolist = data["PLAYLIST"];
+        for (list in audiolist) {
+            let kode = list;
+            addplay(1, kode);
+            for (audio in audiolist[list]) {
+                addlist(nolist, 1, audiolist[list][audio]);
             }
+            nolist++;
         }
 
         $("#simpan").click(function () {
             let playlist = {};
             let kodeplaylist = document.getElementsByClassName("kodeplaylist");
             for (let i = 0; i < kodeplaylist.length; i++) {
-                let nokode = kodeplaylist[i].innerHTML;
-                let audio = document.getElementsByClassName("kdval" + nokode);
+                let nokode = kodeplaylist[i].value;
+                let kdlist = kodeplaylist[i].getAttribute("nolist");
+                let audio = document.getElementsByClassName("kdval" + kdlist);
                 // console.log(audio);
                 playlist[nokode] = [];
                 for (let j = 0; j < audio.length; j++) {
@@ -64,11 +54,39 @@
         });
     });
 
+    function addplay(add = 1, val = "") {
+        if (add == 1) {
+            $("#playlist").append(`<div id="wrap${nolist}">
+                    <div class="row mb-2 listcode">
+                        <div class="input-group mb-2" style="width:300px;">
+                            <label class="input-group-text">Kode</label>
+                            <input type="text" class="form-control kodeplaylist" value="${val}" nolist="${nolist}" placeholder="Kode Playlist"/>
+                        </div>
+                        <div id="${nolist}" style="margin-left:15px;"></div>
+                    </div>
+                    <div class="mb-2">
+                        <button type="button" class="btn btn-success btn-sm" onclick="addlist('${nolist}',1)">
+                            <i class="bi bi-plus"></i></button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="addlist('${nolist}',-1)">
+                            <i class="bi bi-dash"></i></button>
+                    </div></div>`);
 
-    function addlist(id = "", add = 1, value = "") {
+            if (val == "") {
+                addlist(nolist);
+                nolist++;
+            }
+        } else {
+            // let nval = document.getElementsByClassName("nval" + id);
+            // nval[nval.length - 1].parentNode.removeChild(nval[nval.length - 1]);
+            document.getElementById("wrap" + (nolist - 1)).remove();
+            nolist--;
+        }
+    }
+
+    function addlist(id = "", add = 1, val = "") {
         if (add == 1) {
             $("#" + id).append(`<div class="row mb-2 nval${id}">
-                    <input type="text" class="form-control kdval${id}" value="${value}"/>
+                    <input type="text" class="form-control kdval${id}" value="${val}" placeholder="Nama Musik"/>
                 </div>`);
         } else {
             let nval = document.getElementsByClassName("nval" + id);

@@ -43,6 +43,10 @@ def print_log(pesan):
     pesan = waktu + pesan
     print(pesan)
 
+# def config2file():
+#     global DB_jadwal, DB_konfigurasi, DB_libur, DB_playlist
+#     global FILE_KONFIGURASI
+
 # Hari dalam bahasa indonesia
 def date_id(day=Now.strftime("%A"),cap = False):
     day = day.lower()
@@ -197,8 +201,9 @@ def pengumuman():
     print_log("Modul pengumuman dijalankan")
     while Run:
         if Pengumuman != "":
-                if os.path.isfile("output.mp3"):
-                    os.remove("output.mp3")
+                file_output = DB_konfigurasi["folder_musik"]+"TTS_output.mp3"
+                if os.path.isfile(file_output):
+                    os.remove(file_output)
                 print_log("Mengumumkan "+Pengumuman)
                 try:
                     if DB_konfigurasi["kecepatan_pengejaan_tts"] == "tinggi":
@@ -206,8 +211,7 @@ def pengumuman():
                     else:
                         gtts_slow = True
                     res = gTTS(text=Pengumuman, lang='id', slow=gtts_slow)
-                    filename = "output.mp3"
-                    res.save(filename)
+                    res.save(file_output)
                     # tunggu jika masih ada yang dimainkan
                     if DB_konfigurasi["tunggu_playlist_selesai"] == "Ya" :
                         while Bell_dimainkan != "":
@@ -215,7 +219,7 @@ def pengumuman():
                     try:
                         if DB_konfigurasi["nada_pemberitahuan"] != "":
                             playsound(DB_konfigurasi["folder_musik"]+DB_konfigurasi["nada_pemberitahuan"])
-                        playsound("output.mp3")
+                        playsound(file_output)
                     except Exception as error:
                         print_log("Gagal memainkan audio")
                         print(error)
@@ -334,6 +338,7 @@ def index():
             # print(json.dumps(file_conf, indent=4))
             with open(FILE_KONFIGURASI, 'w') as outfile:
                 json.dump(file_conf, outfile, indent=4)
+            load_config()
         elif "playlist" in request.form:
             playlist = request.form.get('playlist')
             file_conf = json.load(open(FILE_KONFIGURASI))
@@ -342,6 +347,7 @@ def index():
             # print(json.dumps(file_conf, indent=4))
             with open(FILE_KONFIGURASI, 'w') as outfile:
                 json.dump(file_conf, outfile, indent=4)
+            load_config()
 
     data = {"JADWAL":DB_jadwal, "PLAYLIST":DB_playlist, "TANGGAL_LIBUR":DB_libur, "KONFIGURASI":DB_konfigurasi,"POST":json.loads(POST)}
     return render_template('index.html', data=data)

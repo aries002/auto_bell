@@ -57,8 +57,8 @@
 </form>
 
 <script>
+    let jadwal = data["JADWAL"];
     $(document).ready(function () {
-        let jadwal = data["JADWAL"];
         for (hari in jadwal) {
             for (jam in jadwal[hari]) {
                 // console.log(jam);
@@ -96,6 +96,8 @@
                 jadwal["jumat"][injamjumat[i].value] = inkodejumat[i].value;
             }
 
+            // console.log(jadwal);
+
             $.ajax({
                 type: "POST",
                 url: window.location.pathname,
@@ -110,13 +112,20 @@
 
 
     function addjam(id = "", add = 1, jam = "", kode = "") {
+        let slc = "",
+            playlist = data["PLAYLIST"];
+        // console.log(slc);
+
         if (add == 1) {
+            for (p in playlist) {
+                slc += '<option value="' + p + '" ' + (kode == p ? 'selected' : '') + '>' + p + '</option>';
+            }
             $("#jam" + id).append(`<div class="row mb-2 njam${id}">
                 <div class="col-sm-2">
                     <input type="time" class="form-control injam${id}" placeholder="Jam" value="${jam}"/>
                 </div>
                 <div class="col-sm-4">
-                    <input type="text" class="form-control inkode${id}" placeholder="Kode" value="${kode}"/>
+                    <select class="form-control inkode${id}" id="slc${id}">${slc}</select>
                 </div>
             </div>`);
         } else {

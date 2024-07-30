@@ -247,20 +247,25 @@ def alarm():
     #     # print(waktu_alarm)
     print_log("Modul timer dijalankan")
     while Run:
-        Alarm = False
+        Alarm = True
         hari_ini = date_id()
         Now = datetime.datetime.now()
         tanggal = Now.strftime("%d/%m/%Y")
         
         #pengecekkan hari libur
-        for hari in Hari_masuk:
-            if hari == hari_ini:
-                #pengecekkan tanggal libur
-                for tgl in DB_libur:
-                    # print(tgl)
-                    Alarm = True
-                    if tgl == tanggal:
-                        Alarm = False
+        # for hari in Hari_masuk:
+        #     if hari == hari_ini:
+
+        #pengecekkan tanggal libur
+        if tanggal in DB_libur:
+            alarm = False
+        if not hari_ini in Hari_masuk:
+            alarm = False
+        # for tgl in DB_libur:
+        #     # print(tgl)
+        #     Alarm = True
+        #     if tgl == tanggal:
+        #         Alarm = False
                 # time.sleep(100)
         #perulangan yang baru
         if Alarm:
@@ -355,7 +360,7 @@ def index():
 @http.route("/api/<string:page>/<string:key>", methods=['GET', 'POST'])
 def api(page="",key=""):
     global DB_jadwal, DB_konfigurasi, DB_playlist, DB_libur
-    global http, Run, Alarm, Pengumuman, Now, Hari_masuk,jam_sekarang, Bell_dimainkan, Music
+    global http, Run, Alarm, Pengumuman, Now, Hari_masuk,jam_sekarang, Bell_dimainkan, Music, Musik_dimainkan
 
     err = {}
     response = ""
@@ -380,12 +385,16 @@ def api(page="",key=""):
     elif page == "info":
         informasi={}
         informasi['jam']=time.strftime('%H:%M')
+        informasi['tanggal']=Now.strftime("%d/%m/%Y")
         informasi['hari']=date_id()
-        informasi['playlist_dimainkan']=Bell_dimainkan
+        informasi['bell_dimainkan']=Bell_dimainkan
+        informasi['vlc dimainkan']=Musik_dimainkan
         informasi['thread_alarm']=thread_alarm.is_alive()
         informasi['thread_player']=thread_player.is_alive()
         informasi['thread_pengumuman']=thread_pengumuman.is_alive()
+        informasi['thread_music_player']=thread_music_player.is_alive()
         informasi['status_timer']=Alarm
+        informasi['status_vlc']=Music
         response = jsonify(informasi)
 
     elif(page== "reload"):

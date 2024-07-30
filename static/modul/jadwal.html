@@ -52,6 +52,26 @@
         </div>
     </div>
     <div class="mb-3">
+        <label for="sabtu" class="form-label">Sabtu</label>
+        <div id="jamsabtu"></div>
+        <div>
+            <button type="button" class="btn btn-success btn-sm" onclick="addjam('sabtu',1)">
+                <i class="bi bi-plus"></i></button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="addjam('sabtu',-1)">
+                <i class="bi bi-dash"></i></button>
+        </div>
+    </div>
+    <div class="mb-3">
+        <label for="minggu" class="form-label">Minggu</label>
+        <div id="jamminggu"></div>
+        <div>
+            <button type="button" class="btn btn-success btn-sm" onclick="addjam('minggu',1)">
+                <i class="bi bi-plus"></i></button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="addjam('minggu',-1)">
+                <i class="bi bi-dash"></i></button>
+        </div>
+    </div>
+    <div class="mb-3">
         <input type="button" id="simpan" value="Simpan" class="btn btn-primary">
     </div>
 </form>
@@ -67,44 +87,57 @@
         }
 
         $("#simpan").click(function () {
-            let jadwal = { "senin": {}, "selasa": {}, "rabu": {}, "kamis": {}, "jumat": {} };
+            let sjadwal = { "senin": {}, "selasa": {}, "rabu": {}, "kamis": {}, "jumat": {}, "sabtu": {}, "minggu": {} };
             let injamsenin = document.getElementsByClassName("injamsenin");
             let injamselasa = document.getElementsByClassName("injamselasa");
             let injamrabu = document.getElementsByClassName("injamrabu");
             let injamkamis = document.getElementsByClassName("injamkamis");
             let injamjumat = document.getElementsByClassName("injamjumat");
+            let injamsabtu = document.getElementsByClassName("injamsabtu");
+            let injamminggu = document.getElementsByClassName("injamminggu");
 
             let inkodesenin = document.getElementsByClassName("inkodesenin");
             let inkodeselasa = document.getElementsByClassName("inkodeselasa");
             let inkoderabu = document.getElementsByClassName("inkoderabu");
             let inkodekamis = document.getElementsByClassName("inkodekamis");
             let inkodejumat = document.getElementsByClassName("inkodejumat");
+            let inkodesabtu = document.getElementsByClassName("inkodesabtu");
+            let inkodeminggu = document.getElementsByClassName("inkodeminggu");
 
             for (let i = 0; i < injamsenin.length; i++) {
-                jadwal["senin"][injamsenin[i].value] = inkodesenin[i].value;
+                sjadwal["senin"][injamsenin[i].value] = inkodesenin[i].value;
             }
             for (let i = 0; i < injamselasa.length; i++) {
-                jadwal["selasa"][injamselasa[i].value] = inkodeselasa[i].value;
+                sjadwal["selasa"][injamselasa[i].value] = inkodeselasa[i].value;
             }
             for (let i = 0; i < injamrabu.length; i++) {
-                jadwal["rabu"][injamrabu[i].value] = inkoderabu[i].value;
+                sjadwal["rabu"][injamrabu[i].value] = inkoderabu[i].value;
             }
             for (let i = 0; i < injamkamis.length; i++) {
-                jadwal["kamis"][injamkamis[i].value] = inkodekamis[i].value;
+                sjadwal["kamis"][injamkamis[i].value] = inkodekamis[i].value;
             }
             for (let i = 0; i < injamjumat.length; i++) {
-                jadwal["jumat"][injamjumat[i].value] = inkodejumat[i].value;
+                sjadwal["jumat"][injamjumat[i].value] = inkodejumat[i].value;
+            }
+            for (let i = 0; i < injamsabtu.length; i++) {
+                sjadwal["sabtu"][injamsabtu[i].value] = inkodesabtu[i].value;
+            }
+            for (let i = 0; i < injamminggu.length; i++) {
+                sjadwal["minggu"][injamminggu[i].value] = inkodeminggu[i].value;
             }
 
-            // console.log(jadwal);
+            // console.log(sjadwal);
 
             $.ajax({
                 type: "POST",
                 url: window.location.pathname,
-                data: { "jadwal": JSON.stringify(jadwal) },
+                data: { "jadwal": JSON.stringify(sjadwal) },
                 success: function (data) {
                     // console.log(data);
                     makeToast("Data disimpan");
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 300);
                 }
             });
         });

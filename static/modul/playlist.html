@@ -49,6 +49,9 @@
                 success: function (data) {
                     // console.log(data);
                     makeToast("Data disimpan");
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 300);
                 }
             });
         });
@@ -61,6 +64,7 @@
                         <div class="input-group mb-2" style="width:300px;">
                             <label class="input-group-text">Kode</label>
                             <input type="text" class="form-control kodeplaylist" value="${val}" nolist="${nolist}" placeholder="Kode Playlist"/>
+                            <button type="button" onclick="playAudio('${val}')" class="btn btn-info"><i class="bi bi-play"></i></button>
                         </div>
                         <div id="${nolist}" style="margin-left:15px;"></div>
                     </div>
@@ -81,6 +85,18 @@
             document.getElementById("wrap" + (nolist - 1)).remove();
             nolist--;
         }
+    }
+
+    function playAudio(name = "") {
+        $.ajax({
+            type: "POST",
+            url: window.location.pathname + "api/play/" + data["KONFIGURASI"]["key_api"],
+            data: { "playlist": name },
+            success: function (data) {
+                // console.log(data);
+                makeToast("Play Audio");
+            }
+        });
     }
 
     function addlist(id = "", add = 1, val = "") {

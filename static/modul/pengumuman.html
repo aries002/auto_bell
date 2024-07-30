@@ -1,0 +1,37 @@
+<form method="POST">
+    <div class="mb-3">
+        <h2 for="isi" class="form-label">Pengumuman</h2>
+        <span id="pesan"></span>
+        <textarea name="isi" id="isi" class="form-control"
+            placeholder="Masukkan pesan untuk dikirimkan ke bel"></textarea>
+    </div>
+    <div class="mb-3">
+        <input type="button" id="kirim" value="Kirim" class="btn btn-primary">
+    </div>
+</form>
+<script>
+    const POST = data["POST"];
+    $(document).ready(function () {
+        if (POST.hasOwnProperty("isi")) {
+            $("#pesan").html('<b>Pesan: </b>' + POST['isi'] + '<br><button type="button" class="btn btn-primary" onclick="window.location.reload()" title="Kirim Ulang" style="padding: .25rem .5rem;font-size: .75rem;">Kirim Ulang <i class="bi bi-arrow-counterclockwise"></i></button><br><br>');
+        }
+
+        $("#kirim").click(function () {
+            let isi = $("#isi").val();
+            if (isi != "") {
+                makeToast("Mengirim pengumuman");
+                $.ajax({
+                    type: "POST",
+                    url: window.location.pathname,
+                    data: { "isi": isi },
+                    success: function (data) {
+                        // console.log(data);
+                        $("#pesan").html('<b>Pesan: </b>' + isi + '<br><button type="button" class="btn btn-primary" onclick="window.location.reload()" title="Kirim Ulang" style="padding: .25rem .5rem;font-size: .75rem;">Kirim Ulang <i class="bi bi-arrow-counterclockwise"></i></button><br><br>');
+                    }
+                });
+            } else {
+                makeToast("Harap mengisi pengumuman");
+            }
+        });
+    });
+</script>
